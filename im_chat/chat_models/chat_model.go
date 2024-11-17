@@ -1,4 +1,4 @@
-package models
+package chat_models
 
 import (
 	"server/common/models"

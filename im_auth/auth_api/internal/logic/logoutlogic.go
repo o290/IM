@@ -3,10 +3,8 @@ package logic
 import (
 	"context"
 
-	"server/im_auth/auth_api/internal/svc"
-	"server/im_auth/auth_api/internal/types"
-
 	"github.com/zeromicro/go-zero/core/logx"
+	"server/im_auth/auth_api/internal/svc"
 )
 
 type LogoutLogic struct {
@@ -23,7 +21,7 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 	}
 }
 
-func (l *LogoutLogic) Logout() (resp *types.Response, err error) {
+func (l *LogoutLogic) Logout() (resp string, err error) {
 	// todo: add your logic here and delete this line
 
 	return

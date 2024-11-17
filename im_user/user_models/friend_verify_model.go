@@ -1,4 +1,4 @@
-package models
+package user_models
 
 import (
 	"server/common/models"
