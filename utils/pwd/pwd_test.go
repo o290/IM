@@ -6,7 +6,7 @@ import (
 )
 
 func TestHashPwd(t *testing.T) {
-	hash := HashPwd("1234567")
+	hash := HashPwd("123456")
 	fmt.Println(hash)
 }
 func TestCheckPwd(t *testing.T) {

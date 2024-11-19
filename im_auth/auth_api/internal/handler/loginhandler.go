@@ -1,10 +1,11 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/zeromicro/go-zero/rest/httpx"
 	"net/http"
 	"server/common/response"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
 	"server/im_auth/auth_api/internal/logic"
 	"server/im_auth/auth_api/internal/svc"
 	"server/im_auth/auth_api/internal/types"
@@ -13,11 +14,12 @@ import (
 func loginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.LoginRequest
+
 		if err := httpx.Parse(r, &req); err != nil {
 			response.Response(r, w, nil, err)
 			return
 		}
-
+		fmt.Println(req)
 		l := logic.NewLoginLogic(r.Context(), svcCtx)
 		resp, err := l.Login(&req)
 		//if err != nil {

@@ -1,6 +1,7 @@
 package response
 
 import (
+	"fmt"
 	"github.com/zeromicro/go-zero/rest/httpx"
 	"net/http"
 )
@@ -27,7 +28,7 @@ func Response(r *http.Request, w http.ResponseWriter, resp interface{}, err erro
 	errCode := uint32(7)
 	// 可以根据错误码，返回具体错误信息
 	//errMsg := "服务器错误"
-
+	fmt.Println(err.Error())
 	httpx.WriteJson(w, http.StatusOK, &Body{
 		Code: errCode,
 		Msg:  err.Error(),

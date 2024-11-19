@@ -9,8 +9,8 @@ func TestGenToken(t *testing.T) {
 	token, err := GenToken(JwtPayload{
 		UserID:   1,
 		Role:     1,
-		UserName: "aaa",
-	}, "12345", 8)
+		NickName: "tom",
+	}, "123456", 8)
 	fmt.Println(token, err)
 }
 
