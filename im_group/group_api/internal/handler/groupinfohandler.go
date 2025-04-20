@@ -4,21 +4,21 @@ import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"server/im_auth/auth_api/internal/logic"
-	"server/im_auth/auth_api/internal/svc"
-	"server/im_auth/auth_api/internal/types"
+	"server/im_group/group_api/internal/logic"
+	"server/im_group/group_api/internal/svc"
+	"server/im_group/group_api/internal/types"
 )
 
-func authenticationHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func groupInfoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.AuthenticationRequest
+		var req types.GroupInfoRequest
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := logic.NewAuthenticationLogic(r.Context(), svcCtx)
-		resp, err := l.Authentication(&req)
+		l := logic.NewGroupInfoLogic(r.Context(), svcCtx)
+		resp, err := l.GroupInfo(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

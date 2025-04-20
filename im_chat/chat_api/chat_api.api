@@ -1,0 +1,79 @@
+syntax = "v1"
+
+type ChatHistoryRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	Page     int  `form:"page,optional"`
+	Limit    int  `form:"limit,optional"`
+	FriendID uint `form:"friendID"`
+}
+
+type ChatHistoryResponse {
+	ID        uint   `json:"id"`
+	UserID    uint   `json:"userID"`
+	NickName  string `json:"nickName"`
+	Avatar    string `json:"avatar"`
+	CreatedAt string `json:"created_at"`
+//Msg any `json:"msg"`
+//SystemMsg any  `json:"systemMsg"`
+}
+
+type ChatSessionRequest {
+	UserID uint `header:"User-ID"` //与网关传来的保持一致
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+	Key    int  `form:"key,optional"`
+}
+
+type ChatSession {
+	UserID     uint   `json:"userID"`
+	NickName   string `json:"nickName"`
+	Avatar     string `json:"avatar"`
+	CreatedAt  string `json:"created_at"`
+	MsgPreview string `json:"msgPreview"` //消息预览
+	IsTop      bool   `json:"isTop"` //是否置顶
+}
+
+type ChatSessionResponse {
+	List  []ChatSession `json:"list"`
+	Count int64         `json:"count"`
+}
+
+type UserTopRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	FriendID uint `json:"friendID"`
+}
+
+type UserTopResponse {}
+
+type ChatDeleteRequest {
+	UserID uint   `header:"User-ID"` //与网关传来的保持一致
+	IDList []uint `json:"idList"`
+}
+
+type ChatDeleteResponse {}
+
+//前端在连接websocket的时候没有请求头
+type ChatRequest {
+	UserID uint `header:"User-ID"`
+}
+
+type ChatResponse {}
+
+service chat {
+	@handler ChatHistory
+	get /api/chat/history (ChatHistoryRequest) returns (ChatHistoryResponse) //聊天记录
+
+	@handler ChatSession
+	get /api/chat/session (ChatSessionRequest) returns (ChatSessionResponse) //最近会话列表
+
+	@handler UserTop
+	post /api/chat/user_top (UserTopRequest) returns (UserTopResponse) //好友置顶
+
+	@handler ChatDelete
+	delete /api/chat/chat (ChatDeleteRequest) returns (ChatDeleteResponse) //删除聊天记录
+
+	@handler ChatHandler
+	get /api/chat/ws/chat (ChatRequest) returns (ChatResponse) //ws对话
+}
+
+//goctl api go -api chat_api.api -dir .

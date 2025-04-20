@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"server/im_auth/auth_api/internal/svc"
-	"server/im_auth/auth_api/internal/types"
+	"server/fim_settings/settings_api/internal/svc"
+	"server/fim_settings/settings_api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -31,6 +31,5 @@ func (l *Open_login_infoLogic) Open_login_info() (resp []types.OpenLoginInfoResp
 			Icon: s.Icon,
 		})
 	}
-
 	return
 }
