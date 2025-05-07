@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"server/common/etcd"
 
 	"server/im_auth/auth_api/internal/config"
 	"server/im_auth/auth_api/internal/handler"
@@ -25,6 +26,9 @@ func main() {
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
+
+	//服务注册
+	etcd.DeliveryAddr(c.Etcd, c.Name+"_api", fmt.Sprintf("%s:%d", c.Host, c.Port))
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	server.Start()

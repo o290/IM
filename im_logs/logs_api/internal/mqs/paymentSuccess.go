@@ -3,7 +3,7 @@ package mqs
 import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logx"
-	"server/im_group/group_api/internal/svc"
+	"server/im_logs/logs_api/internal/svc"
 )
 
 type PaymentSuccess struct {

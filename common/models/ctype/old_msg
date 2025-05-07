@@ -190,6 +190,7 @@ const (
 	QuoteMsgType
 	AtMsgType
 	TipMsgType
+	AckMsgType
 	ReadMsgType // 已读消息
 )
 
@@ -207,8 +208,8 @@ type Msg struct {
 	QuoteMsg     *QuoteMsg     `json:"quoteMsg,omitempty"`
 	AtMsg        *AtMsg        `json:"atMsg,omitempty"`  //@消息，群聊
 	TipMsg       *TipMsg       `json:"tipMsg,omitempty"` //提示消息，一般是不入库的
-	//AckMsg       *AckMsg       `json:"ackMsg,omitempty"` //确认消息，一般是不入库的
-	ReadMsg *ReadMsg `json:"readMsg,omitempty"`
+	AckMsg       *AckMsg       `json:"ackMsg,omitempty"` //确认消息，一般是不入库的
+	ReadMsg      *ReadMsg      `json:"readMsg,omitempty"`
 }
 
 func (m Msg) MsgPreview() string {
@@ -324,16 +325,13 @@ type TipMsg struct {
 	Status  string `json:"status"`  //error success warning info
 	Content string `json:"content"` //回复的内容
 }
-
-//type AckMsg struct {
-//	MsgID  uint   `json:"msgID"`
-//	Status int32  `json:"status"` //0:发送中 1:已发送 2:已接收 3:已读
-//	ErrMsg string `json:"errMsg"` //错误信息
-//}
-
-// ReadMsg 已读消息结构体
-type ReadMsg struct {
+type AckMsg struct {
 	MsgID  uint   `json:"msgID"`
 	Status int32  `json:"status"` //0:发送中 1:已发送 2:已接收 3:已读
 	ErrMsg string `json:"errMsg"` //错误信息
+}
+
+// ReadMsg 已读消息结构体
+type ReadMsg struct {
+	MsgID uint `json:"msgID"`
 }

@@ -18,6 +18,11 @@ FileRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: filerpc.rpc
+ChatRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: chatrpc.rpc
 Redis:
   Addr: 127.0.0.1:6379
   Pwd: "123456"

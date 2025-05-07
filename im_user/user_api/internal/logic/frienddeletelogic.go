@@ -2,6 +2,8 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"server/im_user/user_models"
 
 	"server/im_user/user_api/internal/svc"
 	"server/im_user/user_api/internal/types"
@@ -24,7 +26,14 @@ func NewFriendDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Frie
 }
 
 func (l *FriendDeleteLogic) FriendDelete(req *types.FriendDeleteRequest) (resp *types.FriendDeleteResponse, err error) {
-	// todo: add your logic here and delete this line
+	//1.判断是否是好友
+	var friend user_models.FriendModel
+	if !friend.IsFriend(l.svcCtx.DB, req.UserID, req.FriendID) {
+		return nil, errors.New("还不是好友")
+	}
+
+	//2.删除好友
+	l.svcCtx.DB.Delete(&friend)
 
 	return
 }

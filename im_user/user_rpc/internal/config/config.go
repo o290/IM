@@ -7,4 +7,9 @@ type Config struct {
 	UserMysql struct {
 		DataSource string
 	}
+	RedisConf struct {
+		Addr string
+		Pwd  string
+		DB   int
+	}
 }

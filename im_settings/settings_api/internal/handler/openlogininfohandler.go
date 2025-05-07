@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"server/fim_settings/settings_api/internal/logic"
-	"server/fim_settings/settings_api/internal/svc"
+	"server/im_settings/settings_api/internal/logic"
+	"server/im_settings/settings_api/internal/svc"
 )
 
 func open_login_infoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {

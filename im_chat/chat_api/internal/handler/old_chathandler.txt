@@ -10,6 +10,7 @@ import (
 	"server/common/response"
 	"server/common/service/redis_service"
 	"server/im_chat/chat_models"
+	"server/im_chat/chat_rpc/types/chat_rpc"
 	"server/im_file/file_rpc/files"
 	"server/im_user/user_models"
 	"server/im_user/user_rpc/types/user_rpc"
@@ -26,9 +27,11 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
+// Message status constants
 const (
-	MsgStatusSent = 1 // 已发送
-	MsgStatusRead = 2 // 已读
+	MsgStatusSent     = 1 // 已发送
+	MsgStatusReceived = 2 // 已接收
+	MsgStatusRead     = 3 // 已读
 )
 
 // UserWsInfo 用户websocket信息
@@ -43,7 +46,6 @@ var UserOnlineWsMap = map[uint]*UserWsInfo{}
 
 const HeartbeatInterval = 10 * time.Hour // 心跳间隔
 const HeartbeatTimeout = 30 * time.Hour  // 心跳超时时间
-
 type MsgServerAck struct {
 	Code   int   `json:"code"`   // 状态码（0=成功，非0=失败）
 	MsgID  uint  `json:"msgID"`  // 关联的消息ID
@@ -203,17 +205,16 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			//生成唯一消息id，服务端向发送方客户端发送确认消息
 			//!!!!!!!这里客户端需要定时监听消息，判断消息是否超时重传!!!!!!!!!!
 			//msg:A
-			if request.Msg.Type != ctype.ReadMsgType {
-				msgServerID := uint(time.Now().UnixNano() / 1e6)
-				serverAck := MsgServerAck{
-					Code:   http.StatusOK,
-					MsgID:  msgServerID,
-					Status: MsgStatusSent, // 状态值对应“服务端已接收”
-				}
-				if err := conn.WriteJSON(serverAck); err != nil { // 使用 WriteJSON 发送结构化响应
-					logx.Error("Send msg:A failed:", err)
-				}
+			msgServerID := uint(time.Now().UnixNano() / 1e6)
+			serverAck := MsgServerAck{
+				Code:   http.StatusOK,
+				MsgID:  msgServerID,
+				Status: MsgStatusSent, // 状态值对应“服务端已接收”
 			}
+			if err := conn.WriteJSON(serverAck); err != nil { // 使用 WriteJSON 发送结构化响应
+				logx.Error("Send msg:A failed:", err)
+			}
+
 			// 检验聊天对象是否是好友
 			// 消息的接收用户 ID request.RevUserID 不等于当前用户 ID req.UserID
 			if request.RevUserID != req.UserID {
@@ -421,7 +422,7 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					SendTipErrMsg(conn, "消息ID不能为空")
 					continue
 				}
-				MarkMessageAsRead(svcCtx, request.Msg, req.UserID)
+				MarkMessageAsRead(svcCtx, request.Msg.ReadMsg.MsgID, req.UserID)
 			}
 			// 消息入库,入库就是会把聊天记录保存到数据库中
 			msgID := InsertMsgByChat(svcCtx.DB, request.RevUserID, req.UserID, request.Msg)
@@ -497,6 +498,9 @@ func InsertMsgByChat(db *gorm.DB, revUserId uint, sendUserID uint, msg ctype.Msg
 	case ctype.WithdrawMsgType:
 		fmt.Println("撒回消息自己是不入库的")
 		return
+	case ctype.AckMsgType:
+		fmt.Println("确认消息自己是不入库的")
+		return
 	case ctype.ReadMsgType:
 		fmt.Println("已读消息自己是不入库的")
 		return
@@ -506,7 +510,6 @@ func InsertMsgByChat(db *gorm.DB, revUserId uint, sendUserID uint, msg ctype.Msg
 		RevUserID:  revUserId,
 		MsgType:    msg.Type,
 		Msg:        msg,
-		Status:     MsgStatusSent,
 	}
 	// 生成消息预览内容
 	chatModel.MsgPreview = chatModel.MsgPreviewMethod()
@@ -551,6 +554,11 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 		}
 		byteData, _ := json.Marshal(resp)
 		sendWsMapMsg(revUser.WsClientMap, byteData)
+
+		// 发送 ACK - 自己发送给自己的消息，初始状态为已发送
+		sendAck(svcCtx, msgID, sendUserID, revUserId, MsgStatusSent)
+		// 接收者（自己）确认已接收
+		sendAck(svcCtx, msgID, revUserId, sendUserID, MsgStatusReceived)
 		return
 	}
 
@@ -566,7 +574,7 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 		sendWsMapMsg(sendUser.WsClientMap, byteData)
 
 		// 发送 ACK - 消息已发送
-		//sendAck(svcCtx, msgID, sendUserID, revUserId, MsgStatusSent)
+		sendAck(svcCtx, msgID, sendUserID, revUserId, MsgStatusSent)
 	}
 
 	// 给接收者发送消息
@@ -581,14 +589,17 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 		resp.IsMe = false
 		byteData, _ := json.Marshal(resp)
 		sendWsMapMsg(revUser.WsClientMap, byteData)
+
+		// 发送 ACK - 消息已接收
+		sendAck(svcCtx, msgID, revUserId, sendUserID, MsgStatusReceived)
 	}
 }
 
 // MarkMessageAsRead 标记消息为已读
-func MarkMessageAsRead(svcCtx *svc.ServiceContext, msg ctype.Msg, userID uint) {
+func MarkMessageAsRead(svcCtx *svc.ServiceContext, msgID uint, userID uint) {
 	// 获取消息信息
 	var msgModel chat_models.ChatModel
-	err := svcCtx.DB.Take(&msgModel, msg.ReadMsg.MsgID).Error
+	err := svcCtx.DB.Take(&msgModel, msgID).Error
 	if err != nil {
 		logx.Error("Failed to get message:", err)
 		return
@@ -599,16 +610,30 @@ func MarkMessageAsRead(svcCtx *svc.ServiceContext, msg ctype.Msg, userID uint) {
 		logx.Error("User is not the receiver of the message")
 		return
 	}
-	//更新消息状态
-	err = svcCtx.DB.Model(&chat_models.ChatModel{}).
-		Where("id = ? AND rev_user_id = ?", msg.ReadMsg.MsgID, msgModel.RevUserID).
-		Updates(map[string]interface{}{
-			"status":        MsgStatusRead, //已读
-			"last_ack_time": time.Now(),
-		}).Error
+
+	// 发送已读 ACK
+	sendAck(svcCtx, msgID, userID, msgModel.SendUserID, MsgStatusRead)
+}
+
+// 发送 ACK 消息
+func sendAck(svcCtx *svc.ServiceContext, msgID uint, sendUserID uint, revUserID uint, status int32) {
+	ackMsg := ctype.Msg{
+		Type: ctype.AckMsgType,
+		AckMsg: &ctype.AckMsg{
+			MsgID:  msgID,
+			Status: status,
+		},
+	}
+	byteData, _ := json.Marshal(ackMsg)
+	// 调用 RPC 服务发送 ACK
+	_, err := svcCtx.ChatRpc.UserChat(context.Background(), &chat_rpc.UserChatRequest{
+		SendUserId: uint32(sendUserID),
+		RevUserId:  uint32(revUserID),
+		Msg:        byteData,
+		SystemMsg:  nil,
+	})
 
 	if err != nil {
-		logx.Error(err)
-		return
+		logx.Error("Failed to send ACK:", err)
 	}
 }

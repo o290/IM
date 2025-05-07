@@ -2,8 +2,8 @@ package mqs
 
 import (
 	"context"
-	"server/im_group/group_api/internal/config"
-	"server/im_group/group_api/internal/svc"
+	"server/im_logs/logs_api/internal/config"
+	"server/im_logs/logs_api/internal/svc"
 
 	"github.com/zeromicro/go-queue/kq"
 	"github.com/zeromicro/go-zero/core/service"

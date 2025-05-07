@@ -26,12 +26,13 @@ func NewUserCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserCr
 }
 
 func (l *UserCreateLogic) UserCreate(in *user_rpc.UserCreateRequest) (*user_rpc.UserCreateResponse, error) {
-	//查看用户的openid是否存在
+	//1.查看用户的openid是否存在，存在则不需要创建
 	var user user_models.UserModel
 	err := l.svcCtx.DB.Take(&user, "open_id=?", in.OpenId).Error
 	if err != nil {
 		return nil, errors.New("该用户已存在")
 	}
+	//2.构造用户信息结构体
 	user = user_models.UserModel{
 		Nickname:       in.NickName,
 		Avatar:         in.Avatar,
@@ -39,10 +40,23 @@ func (l *UserCreateLogic) UserCreate(in *user_rpc.UserCreateRequest) (*user_rpc.
 		OpenID:         in.OpenId,
 		RegisterSource: in.RegisterSource,
 	}
+	//3.创建用户
 	err = l.svcCtx.DB.Create(&user).Error
 	if err != nil {
 		logx.Error(err)
 		return nil, errors.New("创建用户失败")
 	}
+	//4.创建用户配置
+	l.svcCtx.DB.Create(&user_models.UserConfModel{
+		UserID:        user.ID,
+		RecallMessage: nil,
+		FriendOnline:  false,
+		Sound:         true,
+		SecureLink:    false,
+		SavePwd:       false,
+		SearchUser:    2,
+		Verification:  2,
+		Online:        true,
+	})
 	return &user_rpc.UserCreateResponse{UserId: int32(user.ID)}, nil
 }

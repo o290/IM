@@ -37,7 +37,7 @@ func (l *LogoutLogic) Logout(token string) (resp string, err error) {
 	}
 	now := time.Now()
 	expiration := payload.ExpiresAt.Time.Sub(now)
-	key := fmt.Sprintf("logout_%d", payload.UserID)
+	key := fmt.Sprintf("logout_%s", token)
 	l.svcCtx.Redis.SetNX(l.ctx, key, "", expiration)
 	resp = "注销成功"
 	return

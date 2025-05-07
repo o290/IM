@@ -2,6 +2,8 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"server/im_user/user_models"
 
 	"server/im_user/user_api/internal/svc"
 	"server/im_user/user_api/internal/types"
@@ -24,7 +26,26 @@ func NewFriendNoticeUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *FriendNoticeUpdateLogic) FriendNoticeUpdate(req *types.FriendNoticeUpdateRequest) (resp *types.FriendNoticeUpdateResponse, err error) {
-	// todo: add your logic here and delete this line
+	var friend user_models.FriendModel
+	//1.判断是否是好友
+	if !friend.IsFriend(l.svcCtx.DB, req.UserID, req.FriendID) {
+		return nil, errors.New("他不是你的好友")
+	}
 
+	//2.判断备注方是谁
+	if friend.SendUserID == req.UserID {
+		//我是发起方
+		//SendUserNotice指的是发送发对接收方的备注
+		if friend.SendUserNotice == req.Notice {
+			return
+		}
+		l.svcCtx.DB.Model(&friend).Update("send_user_notice", req.Notice)
+	}
+	if friend.RevUserID == req.UserID {
+		if friend.RevUserNotice == req.Notice {
+			return
+		}
+		l.svcCtx.DB.Model(&friend).Update("rev_user_notice", req.Notice)
+	}
 	return
 }

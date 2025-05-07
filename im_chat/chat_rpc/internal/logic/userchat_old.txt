@@ -1,0 +1,161 @@
+// package logic
+//
+// import (
+//
+//	"context"
+//	"encoding/json"
+//	"server/common/models/ctype"
+//	"server/im_chat/chat_models"
+//
+//	"server/im_chat/chat_rpc/internal/svc"
+//	"server/im_chat/chat_rpc/types/chat_rpc"
+//
+//	"github.com/zeromicro/go-zero/core/logx"
+//
+// )
+//
+//	type UserChatLogic struct {
+//		ctx    context.Context
+//		svcCtx *svc.ServiceContext
+//		logx.Logger
+//	}
+//
+//	func NewUserChatLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserChatLogic {
+//		return &UserChatLogic{
+//			ctx:    ctx,
+//			svcCtx: svcCtx,
+//			Logger: logx.WithContext(ctx),
+//		}
+//	}
+//
+//	func (l *UserChatLogic) UserChat(in *chat_rpc.UserChatRequest) (*chat_rpc.UserChatResponse, error) {
+//		var msg ctype.Msg
+//		err := json.Unmarshal(in.Msg, &msg)
+//		if err != nil {
+//			logx.Error(err)
+//			return nil, err
+//		}
+//		var systemMsg *ctype.SystemMsg
+//		if in.SystemMsg != nil {
+//			err = json.Unmarshal(in.SystemMsg, &systemMsg)
+//			if err != nil {
+//				logx.Error(err)
+//				return nil, err
+//			}
+//		}
+//
+//		chat := chat_models.ChatModel{
+//			SendUserID: uint(in.SendUserId),
+//			RevUserID:  uint(in.RevUserId),
+//			MsgType:    msg.Type,
+//			Msg:        msg,
+//			SystemMsg:  systemMsg,
+//		}
+//		chat.MsgPreview = chat.MsgPreviewMethod()
+//		err = l.svcCtx.DB.Create(&chat).Error
+//		if err != nil {
+//			logx.Error(err)
+//			return nil, err
+//		}
+//		return &chat_rpc.UserChatResponse{}, nil
+//	}
+package logic
+
+import (
+	"context"
+	"encoding/json"
+	"server/common/models/ctype"
+	"server/im_chat/chat_models"
+	"time"
+
+	"server/im_chat/chat_rpc/internal/svc"
+	"server/im_chat/chat_rpc/types/chat_rpc"
+
+	"github.com/pkg/errors"
+	"github.com/zeromicro/go-zero/core/logx"
+)
+
+type UserChatLogic struct {
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+	logx.Logger
+}
+
+func NewUserChatLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserChatLogic {
+	return &UserChatLogic{
+		ctx:    ctx,
+		svcCtx: svcCtx,
+		Logger: logx.WithContext(ctx),
+	}
+}
+
+func (l *UserChatLogic) UserChat(in *chat_rpc.UserChatRequest) (*chat_rpc.UserChatResponse, error) {
+	var msg ctype.Msg
+	err := json.Unmarshal(in.Msg, &msg)
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
+
+	// 处理 ACK 消息
+	logx.Info(msg.Type)
+	if msg.Type == ctype.ReadMsgType {
+		return l.handleAckMessage(in, msg)
+	}
+
+	var systemMsg *ctype.SystemMsg
+	if in.SystemMsg != nil {
+		err = json.Unmarshal(in.SystemMsg, &systemMsg)
+		if err != nil {
+			logx.Error(err)
+			return nil, err
+		}
+	}
+
+	chat := chat_models.ChatModel{
+		SendUserID: uint(in.SendUserId),
+		RevUserID:  uint(in.RevUserId),
+		MsgType:    msg.Type,
+		Msg:        msg,
+		SystemMsg:  systemMsg,
+		Status:     0, // 初始状态为发送中
+	}
+	chat.MsgPreview = chat.MsgPreviewMethod()
+
+	err = l.svcCtx.DB.Create(&chat).Error
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
+
+	// 发送消息后更新状态为已发送
+	err = l.svcCtx.DB.Model(&chat).Update("status", 1).Error
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
+
+	return &chat_rpc.UserChatResponse{}, nil
+}
+
+// 处理 已读
+func (l *UserChatLogic) handleAckMessage(in *chat_rpc.UserChatRequest, msg ctype.Msg) (*chat_rpc.UserChatResponse, error) {
+	if msg.ReadMsg == nil {
+		return nil, errors.New("invalid ack message")
+	}
+
+	// 更新消息状态
+	err := l.svcCtx.DB.Model(&chat_models.ChatModel{}).
+		Where("id = ? AND rev_user_id = ?", msg.AckMsg.MsgID, in.SendUserId).
+		Updates(map[string]interface{}{
+			"status":        msg.AckMsg.Status,
+			"last_ack_time": time.Now(),
+		}).Error
+
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
+
+	return &chat_rpc.UserChatResponse{}, nil
+}

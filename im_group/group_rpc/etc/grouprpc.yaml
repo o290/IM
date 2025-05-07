@@ -1,6 +1,16 @@
 Name: grouprpc.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 0.0.0.0:30024
 Etcd:
   Hosts:
   - 127.0.0.1:2379
   Key: grouprpc.rpc
+Mysql:
+  DataSource: root:qwer0209@tcp(127.0.0.1:3306)/im_server?charset=utf8mb4&parseTime=True&loc=Local
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 14:23:09
+  Stat: false
+RedisConf:
+  Addr: 127.0.0.1:6379
+  Pwd: "123456"
+  DB: 0

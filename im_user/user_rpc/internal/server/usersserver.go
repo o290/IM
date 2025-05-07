@@ -27,3 +27,33 @@ func (s *UsersServer) UserCreate(ctx context.Context, in *user_rpc.UserCreateReq
 	l := logic.NewUserCreateLogic(ctx, s.svcCtx)
 	return l.UserCreate(in)
 }
+
+func (s *UsersServer) UserInfo(ctx context.Context, in *user_rpc.UserInfoRequest) (*user_rpc.UserInfoResponse, error) {
+	l := logic.NewUserInfoLogic(ctx, s.svcCtx)
+	return l.UserInfo(in)
+}
+
+func (s *UsersServer) UserBaseInfo(ctx context.Context, in *user_rpc.UserBaseInfoRequest) (*user_rpc.UserBaseInfoResponse, error) {
+	l := logic.NewUserBaseInfoLogic(ctx, s.svcCtx)
+	return l.UserBaseInfo(in)
+}
+
+func (s *UsersServer) UserListInfo(ctx context.Context, in *user_rpc.UserListInfoRequest) (*user_rpc.UserListInfoResponse, error) {
+	l := logic.NewUserListInfoLogic(ctx, s.svcCtx)
+	return l.UserListInfo(in)
+}
+
+func (s *UsersServer) IsFriend(ctx context.Context, in *user_rpc.IsFriendRequest) (*user_rpc.IsFriendResponse, error) {
+	l := logic.NewIsFriendLogic(ctx, s.svcCtx)
+	return l.IsFriend(in)
+}
+
+func (s *UsersServer) FriendList(ctx context.Context, in *user_rpc.FriendListRequest) (*user_rpc.FriendListResponse, error) {
+	l := logic.NewFriendListLogic(ctx, s.svcCtx)
+	return l.FriendList(in)
+}
+
+func (s *UsersServer) UserOlineList(ctx context.Context, in *user_rpc.UserOlineListRequest) (*user_rpc.UserOlineListResponse, error) {
+	l := logic.NewUserOlineListLogic(ctx, s.svcCtx)
+	return l.UserOlineList(in)
+}

@@ -18,18 +18,25 @@ type OpenLoginRequest {
 	Flag string `json:"flag"` //标志是什么登录
 }
 
+type authenticationRequest {
+	Token     string `header:"Token,optional"`
+	ValidPath string `header:"ValidPath,optional"`
+}
+
+type AuthenticationResponse {
+	UserID uint `json:"userID"`
+	Role   int  `json:"role"`
+}
+
 service auth {
 	@handler login
 	post /api/auth/login (LoginRequest) returns (LoginResponse) //登录接口
 
 	@handler authentication
-	post /api/auth/authentication returns (string) //认证接口
+	post /api/auth/authentication (authenticationRequest) returns (string) //认证接口
 
 	@handler logout
 	post /api/auth/logout returns (string) //注销
-
-	@handler open_login_info
-	get /api/auth/open_login returns ([]OpenLoginInfoResponse) //第三方登录信息
 
 	@handler open_login
 	//这个接口是第三方登录

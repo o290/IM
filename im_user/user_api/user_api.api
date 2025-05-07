@@ -1,0 +1,252 @@
+syntax = "v1"
+
+type UserInfoRequest {
+	UserID uint `header:"User-ID"` //与网关传来的保持一致
+	Role   int8 `header:"Role"`
+}
+
+type VerificationQuestion {
+	Problem1 *string `json:"problem1,optional" user_conf:"problem1"`
+	Problem2 *string `json:"problem2,optional" user_conf:"problem2"`
+	Problem3 *string `json:"problem3,optional" user_conf:"problem3"`
+	Answer1  *string `json:"answer1,optional" user_conf:"answer1"`
+	Answer2  *string `json:"answer2,optional" user_conf:"answer2"`
+	Answer3  *string `json:"answer3,optional" user_conf:"answer3"`
+}
+
+type UserInfoResponse {
+	UserID               uint                  `json:"userID"`
+	NickName             string                `json:"nickName"`
+	Abstract             string                `json:"abstract"`
+	Avatar               string                `json:"avatar"`
+	RecallMessage        *string               `json:"recallMessage"` //消息撤回的提示
+	FriendOnline         bool                  `json:"friendOnline"` //好有上线提醒
+	Sound                bool                  `json:"sound"` //提示声音
+	SecureLink           bool                  `json:"secureLink"`
+	SavePwd              bool                  `json:"savePwd"`
+	SearchUser           int8                  `json:"searchUser"` //别人查找自己的方式
+	Verification         int8                  `json:"verification"`
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion"`
+}
+
+type UserInfoUpdateRequest {
+	UserID               uint                  `header:"User-ID"`
+	Nickname             *string               `json:"nickname,optional" user:"nickname"`
+	Abstract             *string               `json:"abstract,optional" user:"abstract"`
+	Avatar               *string               `json:"avatar,optional" user:"avatar"`
+	RecallMessage        *string               `json:"recallMessage,optional" user_conf:"recall_message"` //消息撤回的提示
+	FriendOnline         *bool                 `json:"friendOnline,optional" user_conf:"friend_oline"` //好有上线提醒
+	Sound                *bool                 `json:"sound,optional" user_conf:"sound"` //提示声音
+	SecureLink           *bool                 `json:"secureLink,optional" user_conf:"secure_link"`
+	SavePwd              *bool                 `json:"savePwd,optional" user_conf:"save_pwd"`
+	SearchUser           *int8                 `json:"searchUser,optional" user_conf:"search_user"` //别人查找自己的方式
+	Verification         *int8                 `json:"verification,optional" user_conf:"verification"`
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion,optional" user_conf:"verification_question"`
+}
+
+type UserInfoUpdateResponse {}
+
+type FriendInfoRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	Role     int8 `header:"Role"`
+	FriendID uint `form:"friendID"`
+}
+
+type FriendInfoResponse {
+	UserID   uint   `json:"userID"`
+	NickName string `json:"nickName"`
+	Abstract string `json:"abstract"`
+	Avatar   string `json:"avatar"`
+	Notice   string `json:"notice"` //备注
+	IsOline  bool   `json:"isOnline"` //是否在线
+}
+
+type FriendListRequest {
+	UserID uint `header:"User-ID"` //与网关传来的保持一致
+	Role   int8 `header:"Role"`
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type FriendListResponse {
+	List  []FriendInfoResponse `json:"list"`
+	Count int                  `json:"count"`
+}
+
+type FriendNoticeUpdateRequest {
+	UserID   uint   `header:"User-ID"` //与网关传来的保持一致
+	FriendID uint   `json:"friendID"`
+	Notice   string `json:"notice"`
+}
+
+type FriendNoticeUpdateResponse {}
+
+type SearchRequest {
+	UserID uint   `header:"User-ID"` //与网关传来的保持一致
+	Key    string `form:"key,optional"`
+	Online bool   `form:"online,optional"` //搜索在线用户
+	Page   int    `form:"page,optional"`
+	Limit  int    `form:"limit,optional"`
+}
+
+type SearchInfo {
+	UserID   uint   `json:"userID"`
+	NickName string `json:"nickName"`
+	Abstract string `json:"abstract"`
+	Avatar   string `json:"avatar"`
+	IsFriend bool   `json:"isFriend"` //是否是好友
+}
+
+type SearchResponse {
+	List  []SearchInfo `json:"list"`
+	Count int64        `json:"count"`
+}
+
+type UserValidRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	FriendID uint `json:"friendID"`
+}
+
+type UserValidResponse {
+	Verification         int8                 `json:"verification"`
+	VerificationQuestion VerificationQuestion `json:"verificationQuestion"` //问题与答案，但答案不能返回
+}
+
+type AddFriendRequest {
+	UserID               uint                  `header:"User-ID"` //与网关传来的保持一致
+	FriendID             uint                  `json:"friendID"`
+	Verify               string                `json:"verify,optional"` //验证小徐
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion,optional"` //问题与答案，但答案不能返回
+}
+
+type AddFriendResponse {}
+
+type FriendValidRequest {
+	UserID uint `header:"User-ID"` //与网关传来的保持一致
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type FriendValidInfo {
+	UserID               uint                  `json:"userID"`
+	NickName             string                `json:"nickName"`
+	Avatar               string                `json:"avatar"`
+	Status               int8                  `json:"status"` //0：未操作，1:同意 2:拒绝 3：忽略
+	AdditionalMessage    string                `json:"additionalMessage"` //附加消息
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion"`
+	Verification         int8                  `json:"verification"`
+	ID                   uint                  `json:"id"` //验证记录的id
+	Flag                 string                `json:"flag"` //send我是发起方 rev我是接受方
+	CreatedAt            string                `json:"createdAt"` //验证时间
+}
+
+type FriendValidResponse {
+	List  []FriendValidInfo `json:"list"`
+	Count int64             `json:"count"`
+}
+
+type FriendValidStatusRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	VerifyID uint `json:"verifyID"`
+	Status   int8 `json:"status"` //验证状态
+}
+
+type FriendValidStatusResponse {}
+
+type FriendDeleteRequest {
+	UserID   uint `header:"User-ID"` //与网关传来的保持一致
+	FriendID uint `json:"friendID"`
+}
+
+type FriendDeleteResponse {}
+
+service users {
+	@handler UserInfo
+	get /api/user/user_info (UserInfoRequest) returns (UserInfoResponse) //用户信息接口
+
+	@handler UserInfoUpdate
+	put /api/user/user_info (UserInfoUpdateRequest) returns (UserInfoUpdateResponse) //用户信息修改
+
+	@handler FriendInfo
+	get /api/user/friend_info (FriendInfoRequest) returns (FriendInfoResponse) //好友信息接口
+
+	@handler FriendList
+	get /api/user/friends (FriendListRequest) returns (FriendListResponse) //好友列表
+
+	@handler FriendNoticeUpdate
+	put /api/user/friends (FriendNoticeUpdateRequest) returns (FriendNoticeUpdateResponse) //修改好友备注
+
+	@handler Search
+	get /api/user/search (SearchRequest) returns (SearchResponse) //搜索用户
+
+	@handler userValid
+	post /api/user/valid (UserValidRequest) returns (UserValidResponse) //好友验证：点击加好友，根据验证类型，显示相应内容
+
+	@handler AddFriend
+	post /api/user/friends (AddFriendRequest) returns (AddFriendResponse) //好友添加
+
+	@handler userValidList
+	get /api/user/valid (FriendValidRequest) returns (FriendValidResponse) //好友验证列表
+
+	@handler ValidStatus
+	put /api/user/status (FriendValidStatusRequest) returns (FriendValidStatusResponse) //好友验证状态操作
+
+	@handler FriendDelete
+	delete /api/user/friends (FriendDeleteRequest) returns (FriendDeleteResponse) //删除好友
+}
+
+// goctl api go -api user_api.api -dir .
+type userListRequest {
+	Key   string `form:"key,optional"`
+	Page  int    `form:"page,optional"`
+	Limit int    `form:"limit,optional"`
+}
+
+type UserListInfoResponse {
+	ID              uint   `json:"id"`
+	CreatedAt       string `json:"createdAt"`
+	Nickname        string `json:"nickname"`
+	Avatar          string `json:"avatar"`
+	IP              string `json:"ip"`
+	Addr            string `json:"addr"`
+	IsOnline        bool   `json:"isOnline"`
+	SendMsgCount    int    `json:"sendMsgCount"` // 发送消息个数
+	GroupAdminCount int    `json:"groupAdminCount"` // 建群数量
+	GroupCount      int    `json:"groupCount"` // 进群数量
+}
+
+type userListResponse {
+	List  []UserListInfoResponse `json:"list"`
+	Count int64                  `json:"count"`
+}
+
+type userCurtailRequest {
+	CurtailChat        bool `json:"curtailChat"` // 限制聊天
+	CurtailAddUser     bool `json:"curtailAddUser"` // 限制加人
+	CurtailCreateGroup bool `json:"curtailCreateGroup"` // 限制建群
+	CurtailInGroupChat bool `json:"curtailInGroupChat"` // 限制加群
+}
+
+type userCurtailResponse {}
+
+type userDeleteRequest {
+	IdList []uint `json:"idList"`
+}
+
+type userDeleteResponse {}
+
+@server (
+	middleware: AdminMiddleware
+	group:      Admin
+)
+service users {
+	@handler userList
+	get /api/user/users (userListRequest) returns (userListResponse) //用户列表
+
+	@handler userCurtail
+	post /api/user/curtail (userCurtailRequest) returns (userCurtailResponse) // BRJ
+
+	@handler userDelete
+	delete /api/user/users (userDeleteRequest) returns (userDeleteResponse) // 0MA
+}
+

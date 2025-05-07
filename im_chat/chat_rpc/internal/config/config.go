@@ -4,4 +4,7 @@ import "github.com/zeromicro/go-zero/zrpc"
 
 type Config struct {
 	zrpc.RpcServerConf
+	ChatMysql struct {
+		DataSource string
+	}
 }

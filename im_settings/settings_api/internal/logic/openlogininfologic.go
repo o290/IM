@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"server/fim_settings/settings_api/internal/svc"
-	"server/fim_settings/settings_api/internal/types"
+	"server/im_settings/settings_api/internal/svc"
+	"server/im_settings/settings_api/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

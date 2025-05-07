@@ -1,7 +1,7 @@
 package svc
 
 import (
-	"server/fim_settings/settings_api/internal/config"
+	"server/im_settings/settings_api/internal/config"
 )
 
 type ServiceContext struct {

@@ -6,7 +6,7 @@ package handler
 import (
 	"net/http"
 
-	"server/fim_settings/settings_api/internal/svc"
+	"server/im_settings/settings_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )

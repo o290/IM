@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"errors"
+	"fmt"
 	"server/im_auth/auth_api/internal/svc"
 	"server/im_auth/auth_api/internal/types"
 	"server/im_auth/auth_models"
@@ -60,6 +61,11 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 		logx.Error(err)
 		err = errors.New("服务内部错误")
 		return
+	}
+
+	err = l.svcCtx.KqPusherClient.Push(context.Background(), fmt.Sprintf("%s 用户登录成功", user.Nickname))
+	if err != nil {
+		fmt.Println(err)
 	}
 	//返回响应
 	return &types.LoginResponse{

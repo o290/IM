@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"server/common/etcd"
 
-	"server/fim_settings/settings_api/internal/config"
-	"server/fim_settings/settings_api/internal/handler"
-	"server/fim_settings/settings_api/internal/svc"
+	"server/im_settings/settings_api/internal/config"
+	"server/im_settings/settings_api/internal/handler"
+	"server/im_settings/settings_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"

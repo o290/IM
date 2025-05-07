@@ -2,6 +2,8 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"server/im_user/user_models"
 
 	"server/im_user/user_rpc/internal/svc"
 	"server/im_user/user_rpc/types/user_rpc"
@@ -24,7 +26,17 @@ func NewUserBaseInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *User
 }
 
 func (l *UserBaseInfoLogic) UserBaseInfo(in *user_rpc.UserBaseInfoRequest) (*user_rpc.UserBaseInfoResponse, error) {
-	// todo: add your logic here and delete this line
+	//1.查找该用户的用户信息
+	var user user_models.UserModel
+	err := l.svcCtx.DB.Take(&user, in.UserId).Error
+	if err != nil {
+		return nil, errors.New("用户不存在")
+	}
 
-	return &user_rpc.UserBaseInfoResponse{}, nil
+	//2.返回响应
+	return &user_rpc.UserBaseInfoResponse{
+		UserId:   in.UserId,
+		Avatar:   user.Nickname,
+		NickName: user.Avatar,
+	}, nil
 }

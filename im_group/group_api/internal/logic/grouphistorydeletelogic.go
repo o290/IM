@@ -27,27 +27,26 @@ func NewGroupHistoryDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext)
 }
 
 func (l *GroupHistoryDeleteLogic) GroupHistoryDelete(req *types.GroupHistoryDeleteRequest) (resp *types.GroupHistoryDeleteListResponse, err error) {
-	// 谁能调这个接口 必须得是这个群的成员
+	//1.查询该用户是否是群的成员
 	var member group_models.GroupMemberModel
 	err = l.svcCtx.DB.Take(&member, "group_id = ? and user_id = ?", req.ID, req.UserID).Error
 	if err != nil {
 		return nil, errors.New("该用户不是群成员")
 	}
-	//去查我删除了哪些聊天记录
+	//2.查询我删除了哪些聊天记录
 	var msgIDList []uint
 	l.svcCtx.DB.Model(group_models.GroupUserMsgDeleteModel{}).
 		Where("group_id = ? and user_id = ?", req.ID, req.UserID).
 		Select("msg_id").Scan(&msgIDList)
 
-	// 和我传的聊天记录做一个交集
-	// 1,2,3,4 2,3,6
+	//3.和我要删除的聊天记录求差集，计算出真正要删除的记录
 	addMsgIDList := set.Difference(req.MsgIDList, msgIDList)
 	logx.Infof("删除聊天记录的id列表 %v", addMsgIDList)
 	if len(addMsgIDList) == 0 {
 		return
 	}
 
-	//用户传过来的消息id不一定存在
+	//4.获取要删除的聊天记录消息，判断是否存在，用户传过来的消息id不一定存在
 	var msgIDFindList []uint
 	l.svcCtx.DB.Model(group_models.GroupMsgModel{}).
 		Where("id in ?", addMsgIDList).
@@ -55,6 +54,7 @@ func (l *GroupHistoryDeleteLogic) GroupHistoryDelete(req *types.GroupHistoryDele
 	if len(msgIDFindList) != len(addMsgIDList) {
 		return nil, errors.New("消息一致性错误")
 	}
+	//4.删除聊天记录（往聊天记录表中添加）
 	var list []group_models.GroupUserMsgDeleteModel
 	for _, i2 := range addMsgIDList {
 		list = append(list, group_models.GroupUserMsgDeleteModel{

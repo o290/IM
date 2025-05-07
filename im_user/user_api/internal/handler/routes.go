@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	Admin "server/im_user/user_api/internal/handler/Admin"
 	"server/im_user/user_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -15,10 +16,83 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				Method:  http.MethodGet,
+				Path:    "/api/user/friend_info",
+				Handler: FriendInfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/api/user/friends",
+				Handler: FriendListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/api/user/friends",
+				Handler: FriendNoticeUpdateHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodPost,
+				Path:    "/api/user/friends",
+				Handler: AddFriendHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/api/user/friends",
+				Handler: FriendDeleteHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/api/user/search",
+				Handler: SearchHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/api/user/status",
+				Handler: ValidStatusHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
 				Path:    "/api/user/user_info",
-				Handler: loginHandler(serverCtx),
+				Handler: UserInfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/api/user/user_info",
+				Handler: UserInfoUpdateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/api/user/valid",
+				Handler: userValidHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/api/user/valid",
+				Handler: userValidListHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AdminMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/api/user/curtail",
+					Handler: Admin.UserCurtailHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/api/user/users",
+					Handler: Admin.UserListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/api/user/users",
+					Handler: Admin.UserDeleteHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 }

@@ -3,13 +3,316 @@
 
 package types
 
+type AddGroupRequest struct {
+	UserID               uint                  `header:"User-ID"` //与网关传来的保持一致
+	GroupID              uint                  `json:"groupID"`
+	Verify               string                `json:"verify,optional"`               //验证小徐
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion,optional"` //问题与答案，但答案不能返回
+}
+
+type AddGroupResponse struct {
+}
+
+type GroupFriendsResponse struct {
+	UserId    uint   `json:"userId"`
+	Avatar    string `json:"avatar"`
+	Nickname  string `json:"nickname"`
+	IsInGroup bool   `json:"isInGroup"` //是否在群里面
+}
+
+type GroupMemberInfo struct {
+	UserID         uint   `json:"userId"`
+	UserNickname   string `json:"userNickname"`
+	Avatar         string `json:"avatar"`
+	IsOnline       bool   `json:"isOnline"`
+	Role           int8   `json:"role"`
+	MemberNickname string `json:"memberNickname"`
+	CreatedAt      string `json:"createdAt"`
+	NewMsgDate     string `json:"newMsgDate"`
+}
+
+type GroupMyResponse struct {
+	GroupID          uint   `json:"groupId"`
+	GroupTitle       string `json:"groupTitle"`
+	GroupAvatar      string `json:"groupAvatar"`
+	GroupMemberCount int    `json:"groupMemberCount"`
+	Role             int8   `json:"role"` // 角色
+	Mode             int8   `json:"mode"` //模式 1我创建的群聊 2 我加入的群聊
+}
+
+type GroupSearchResponse struct {
+	GroupID         uint   `json:"groupId"`
+	Title           string `json:"title"`
+	Abstract        string `json:"abstract"`
+	Avatar          string `json:"avatar"`
+	IsInGroup       bool   `json:"isInGroup"`       //我是否在群里面
+	UserCount       int    `json:"userCount"`       // 群用户总数
+	UserOnlineCount int    `json:"userOnlineCount"` //群用户在线总数
+}
+
+type GroupSessionResponse struct {
+	GroupID       uint   `json:"groupId"`
+	Title         string `json:"title"`
+	Avatar        string `json:"avatar"`
+	NewMsgDate    string `json:"newMsgDate"`    //最新的消息
+	NewMsgPreview string `json:"newMsgPreview"` //最新的消息内容
+	IsTop         bool   `json:"isTop"`
+}
+
+type GroupValidInfoResponse struct {
+	ID                   uint                  `json:"id"` //验证id
+	GroupID              uint                  `json:"groupId"`
+	UserID               uint                  `json:"userId"`
+	UserNickname         string                `json:"userNickname"`
+	UserAvatar           string                `json:"userAvatar"`
+	Status               int8                  `json:"status"`
+	AdditionalMessages   string                `json:"additionalMessages"`
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion"`
+	CreatedAt            string                `json:"createdAt"`
+	Type                 int8                  `json:"type"`
+	Title                string                `json:"title"`
+}
+
+type GroupValidRequest struct {
+	UserID  uint `header:"User-ID"` //与网关传来的保持一致
+	GroupID uint `path:"id"`
+}
+
+type GroupValidResponse struct {
+	Verification         int8                 `json:"verification"`
+	VerificationQuestion VerificationQuestion `json:"verificationQuestion"` //问题与答案，但答案不能返回
+}
+
+type UserInfo struct {
+	UserID   uint   `json:"userId"`
+	Avatart  string `json:"avatart"`
+	Nickname string `json:"nickname"`
+}
+
+type VerificationQuestion struct {
+	Problem1 *string `json:"problem1,optional" conf:"problem1"`
+	Problem2 *string `json:"problem2,optional" conf:"problem2"`
+	Problem3 *string `json:"problem3,optional" conf:"problem3"`
+	Answer1  *string `json:"answer1,optional" conf:"answer1"`
+	Answer2  *string `json:"answer2,optional" conf:"answer2"`
+	Answer3  *string `json:"answer3,optional" conf:"answer3"`
+}
+
+type GroupChatRequest struct {
+	UserID uint `header:"User-ID"`
+}
+
+type GroupChatResponse struct {
+}
+
 type GroupCreateRequest struct {
-	Mode       int8   `json: "mode"` // 模式 1 直接创建模式 2 选人创建模式
-	Name       string `json: "name"`
-	IsSearch   bool   `json:"isSearch"`   //是否可以搜到
-	Size       int8   `json:"size"`       //群规模
-	UserIDList []uint `json:"userIdList"` // 用户id列表
+	UserID     uint   `header:"User-ID"`     //与网关传来的保持一致
+	Mode       int8   `json:"mode,optional"` // 模式 1 直接创建模式 2 选人创建模式
+	Name       string `json:"name,optional"`
+	IsSearch   bool   `json:"isSearch,optional"`   //是否可以搜到
+	Size       int    `json:"size,optional"`       //群规模
+	UserIDList []uint `json:"userIdList,optional"` // 用户id列表
 }
 
 type GroupCreateResponse struct {
+}
+
+type GroupFriendsListRequest struct {
+	UserID uint `header:"User-ID"`
+	ID     uint `form:"id"` // 群id
+}
+
+type GroupFriendsListResponse struct {
+	List  []GroupFriendsResponse `json:"list"`
+	Count int                    `json:"count"`
+}
+
+type GroupHistoryDeleteListResponse struct {
+}
+
+type GroupHistoryDeleteRequest struct {
+	UserID    uint   `header:"User-ID"`
+	ID        uint   `path:"id"` // 群id
+	Page      int    `form:"page,optional"`
+	Limit     int    `form:"limit,optional"`
+	MsgIDList []uint `json:"msgIdList"`
+}
+
+type GroupHistoryListResponse struct {
+}
+
+type GroupHistoryRequest struct {
+	UserID uint `header:"User-ID"`
+	ID     uint `path:"id"` // 群id
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type GroupInfoRequest struct {
+	UserID uint `header:"User-ID"`
+	ID     uint `path:"id"` // 群id
+}
+
+type GroupInfoResponse struct {
+	GroupID           uint       `json:"groupId"`           // 群id
+	Title             string     `json:"title"`             // 群名称
+	Abstract          string     `json:"abstract"`          // 群介绍
+	MemberCount       int        `json:"memberCount"`       // 群用户总数
+	MemberOnlineCount int        `json:"memberOnlineCount"` // 群在线用户总数
+	Avatar            string     `json:"avatar"`            // 群头像
+	Creator           UserInfo   `json: "creator"`          // 群主
+	AdminList         []UserInfo `json:"adminList"`         // 管理员列表
+	Role              int8       `json:"role"`              //角色 1 群主 2 群管理员 3 群成员
+	IsProhibition     bool       `json:"isProhibition"`     // 是否开启了全员禁言
+	ProhibitionTime   *int       `json:"prohibitionTime"`   // 自己的禁言时间
+}
+
+type GroupMemberAddRequest struct {
+	UserID       uint   `header:"User-ID"`
+	ID           uint   `json:"id"`           // 群id
+	MemberIDList []uint `json:"memberIdList"` //成员id列表
+}
+
+type GroupMemberAddResponse struct {
+}
+
+type GroupMemberNicknameUpdateRequest struct {
+	UserID   uint   `header:"User-ID"`
+	ID       uint   `json:"id"` // 群id
+	MemberID uint   `json:"memberId"`
+	Nickname string `json:"nickname"`
+}
+
+type GroupMemberNicknameUpdateResponse struct {
+}
+
+type GroupMemberRemoveRequest struct {
+	UserID   uint `header:"User-ID"`
+	ID       uint `form:"id"` // 群id
+	MemberID uint `form:"memberId"`
+}
+
+type GroupMemberRemoveResponse struct {
+}
+
+type GroupMemberRequest struct {
+	UserID uint   `header:"User-ID"` //与网关传来的保持一致
+	ID     uint   `form:"id"`
+	Page   int    `form:"page,optional"`
+	Limit  int    `form:"limit,optional"`
+	Sort   string `form:"sort,optional"`
+}
+
+type GroupMemberResponse struct {
+	List  []GroupMemberInfo `json:"list"`
+	Count int               `json:"count"`
+}
+
+type GroupMemberRoleUpdateRequest struct {
+	UserID   uint `header:"User-ID"`
+	ID       uint `json:"id"` // 群id
+	MemberID uint `json:"memberId"`
+	Role     int8 `json:"role"`
+}
+
+type GroupMemberRoleUpdateResponse struct {
+}
+
+type GroupMyListResponse struct {
+	List  []GroupMyResponse `json:"list"`
+	Count int               `json:"count"`
+}
+
+type GroupMyRequest struct {
+	UserID uint `header:"User-ID"`
+	Mode   int8 `form:"mode"` //模式 1我创建的群聊 2 我加入的群聊
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type GroupProhibitionUpdateRequest struct {
+	UserID          uint `header:"User-ID"`
+	GroupID         uint `json:"groupId"`
+	MemberID        uint `json:"memberId"`
+	ProhibitionTime *int `json:"prohibitionTime,optional"` // 禁言时间 单位分钟
+}
+
+type GroupProhibitionUpdateResponse struct {
+}
+
+type GroupRemoveRequest struct {
+	UserID uint `header:"User-ID"`
+	ID     uint `path:"id"`
+}
+
+type GroupRemoveResponse struct {
+}
+
+type GroupSearchListResponse struct {
+	List  []GroupSearchResponse `json:"list"`
+	Count int                   `json:"count"`
+}
+
+type GroupSearchRequest struct {
+	UserID uint   `header:"User-ID"`
+	Key    string `form:"key,optional"` // 用户id和昵称
+	Page   int    `form:"page,optional"`
+	Limit  int    `form:"limit,optional"`
+}
+
+type GroupSessionListResponse struct {
+	List  []GroupSessionResponse `json:"list"`
+	Count int                    `json:"count"`
+}
+
+type GroupSessionRequest struct {
+	UserID uint `header:"User-ID"`
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type GroupTopRequest struct {
+	UserID  uint `header:"User-ID"`
+	GroupID uint `json:"groupId"`
+	IsTop   bool `json:"isTop"`
+}
+
+type GroupTopResponse struct {
+}
+
+type GroupUpdateRequest struct {
+	UserID               uint                  `header:"User-ID"`
+	ID                   uint                  `json:"id"`                                 // 群id
+	IsSearch             *bool                 `json:"isSearch,optional" conf:"is_search"` //是否可以被搜索到
+	Avatar               *string               `json:"avatar,optional" conf:"avatar"`      // 群头像
+	Abstract             *string               `json:"abstract,optional" conf:"abstract"`  // 群简介
+	Title                *string               `json:"title,optional" conf:"title"`        // 群名
+	Verification         *int8                 `json:"verification,optional" conf:"verification"`
+	IsInvite             *bool                 `json:"isInvite,optional" conf:"is_invite"`
+	IsTemporarySession   *bool                 `json:"isTemporarySession,optional" conf:"is_temporary_session"` //是否开启临时会话
+	IsProhibition        *bool                 `json:"isProhibition,optional" conf:"is_prohibition"`
+	VerificationQuestion *VerificationQuestion `json:"verificationQuestion,optional" conf:"verification_question"`
+}
+
+type GroupUpdateResponse struct {
+}
+
+type GroupValidListRequest struct {
+	UserID uint `header:"User-ID"`
+	Page   int  `form:"page,optional"`
+	Limit  int  `form:"limit,optional"`
+}
+
+type GroupValidListResponse struct {
+	List  []GroupValidInfoResponse `json:"list"`
+	Count int                      `json:"count"`
+}
+
+type GroupValidStatusRequest struct {
+	UserID  uint `header:"User-ID"`
+	ValidID uint `json:"validId"` //验证id
+	Status  int8 `json:"status"`  //状态
+}
+
+type GroupValidStatusResponse struct {
 }

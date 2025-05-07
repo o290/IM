@@ -1,3 +1,25 @@
 Name: file
 Host: 0.0.0.0
-Port: 8888
+Port: 20025
+Etcd: "127.0.0.1:2379"
+Log:
+  Encoding: plain
+  TimeFormat: 2006-01-02 14:23:09
+  Stat: false
+FileSize: 0.1 #单位是MB
+WhiteList:
+  - png
+  - jpg
+  - jpeg
+  - gif
+  - webp
+BlackList:
+  - exe
+UploadDir: uploads
+UserRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: userrpc.rpc
+Mysql:
+  DataSource: root:qwer0209@tcp(127.0.0.1:3306)/im_server?charset=utf8mb4&parseTime=True&loc=Local

@@ -2,6 +2,9 @@ package logic
 
 import (
 	"context"
+	"encoding/json"
+	"server/common/models/ctype"
+	"server/im_chat/chat_models"
 
 	"server/im_chat/chat_rpc/internal/svc"
 	"server/im_chat/chat_rpc/types/chat_rpc"
@@ -24,7 +27,33 @@ func NewUserChatLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserChat
 }
 
 func (l *UserChatLogic) UserChat(in *chat_rpc.UserChatRequest) (*chat_rpc.UserChatResponse, error) {
-	// todo: add your logic here and delete this line
+	var msg ctype.Msg
+	err := json.Unmarshal(in.Msg, &msg)
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
+	var systemMsg *ctype.SystemMsg
+	if in.SystemMsg != nil {
+		err = json.Unmarshal(in.SystemMsg, &systemMsg)
+		if err != nil {
+			logx.Error(err)
+			return nil, err
+		}
+	}
 
+	chat := chat_models.ChatModel{
+		SendUserID: uint(in.SendUserId),
+		RevUserID:  uint(in.RevUserId),
+		MsgType:    msg.Type,
+		Msg:        msg,
+		SystemMsg:  systemMsg,
+	}
+	chat.MsgPreview = chat.MsgPreviewMethod()
+	err = l.svcCtx.DB.Create(&chat).Error
+	if err != nil {
+		logx.Error(err)
+		return nil, err
+	}
 	return &chat_rpc.UserChatResponse{}, nil
 }

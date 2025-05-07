@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	rest.RestConf
+	Etcd  string
 	Mysql struct {
 		DataSource string
 	}
@@ -29,5 +30,11 @@ type Config struct {
 		AppKey   string
 		Redirect string
 	}
-	UserRpc zrpc.RpcClientConf
+	UserRpc   zrpc.RpcClientConf
+	WriteList []string //白名单,不需要认证
+
+	KqPusherConf struct {
+		Brokers []string
+		Topic   string
+	}
 }

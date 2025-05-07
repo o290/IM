@@ -1,9 +1,36 @@
 syntax = "v1"
 
-info(
-    title: "type title here"
-    desc: "type desc here"
-    author: "type author here"
-    email: "type email here"
-    version: "type version here"
-)
+type ImageRequest {
+	UserID uint `header:"User-ID"`
+}
+
+type ImageResponse {
+	Url string `json:"url"`
+}
+
+type FileRequest {
+	UserID uint `header:"User-ID"`
+}
+
+type FileResponse {
+	Src string `json:"src"`
+}
+
+type ImageShowRequest {
+	ImageName string `path:"imageName"`
+}
+
+type ImageShowResponse {}
+
+service file {
+	@handler Image
+	post /api/file/image (ImageRequest) returns (ImageResponse) //图片上传
+
+	@handler File
+	post /api/file/file (FileRequest) returns (FileResponse) //文件上传
+
+	@handler ImageShow
+	get /api/file/:imageName (ImageShowRequest) returns (ImageShowResponse)
+}
+
+// goctl api go -api file_api.api -dir .

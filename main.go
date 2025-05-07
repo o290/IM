@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"server/core"
 	"server/im_chat/chat_models"
+	"server/im_file/file_model"
 	"server/im_group/group_models"
 	"server/im_user/user_models"
 )
@@ -26,11 +27,17 @@ func main() {
 			&user_models.UserConfModel{},
 
 			&chat_models.ChatModel{},
+			&chat_models.TopUserModel{},
+			&chat_models.UserChatDeleteModel{},
 
 			&group_models.GroupModel{},
 			&group_models.GroupMemberModel{},
 			&group_models.GroupMsgModel{},
 			&group_models.GroupVerifyModel{},
+			&group_models.GroupUserMsgDeleteModel{},
+			&group_models.GroupUserTopModel{},
+
+			&file_model.FileModel{},
 		)
 		if err != nil {
 			fmt.Println("表结构生成失败", err)

@@ -15,6 +15,7 @@ Redis:
   Addr: 127.0.0.1:6379
   Pwd: "123456"
   DB: 0
+Etcd: "127.0.0.1:2379"
 QQ:
   AppID:
   AppKey:
@@ -28,3 +29,15 @@ UserRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: userrpc.rpc
+
+WriteList:
+  - /api/auth/login
+  - /api/auth/open_login
+  - /api/auth/authentication
+  - /api/auth/logout
+  - /api/file/.{8}-.{4}-.{4}-.{4}.-{12}
+  - /api/settings/open_login
+KqPusherConf:
+  Brokers:
+    - 172.18.0.3:9093
+  Topic: logs-topic

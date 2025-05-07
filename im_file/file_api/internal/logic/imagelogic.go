@@ -24,7 +24,7 @@ func NewImageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ImageLogic 
 }
 
 func (l *ImageLogic) Image(req *types.ImageRequest) (resp *types.ImageResponse, err error) {
-	// todo: add your logic here and delete this line
+	resp = new(types.ImageResponse)
 
 	return
 }
