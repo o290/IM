@@ -333,7 +333,8 @@ type TipMsg struct {
 
 // ReadMsg 已读消息结构体
 type ReadMsg struct {
-	MsgID  uint   `json:"msgID"`
-	Status int32  `json:"status"` //0:发送中 1:已发送 2:已接收 3:已读
-	ErrMsg string `json:"errMsg"` //错误信息
+	//MsgID  uint   `json:"msgID"`
+	MsgIDList []uint `json:"msgIDList"`
+	Status    int32  `json:"status"` //0:发送中 1:已发送 2:已接收 3:已读
+	ErrMsg    string `json:"errMsg"` //错误信息
 }

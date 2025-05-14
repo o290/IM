@@ -453,12 +453,14 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				request.Msg.QuoteMsg.OriginMsgDate = msgModel.CreatedAt
 			case ctype.ReadMsgType:
 				// 处理消息已读确认
-				if request.Msg.ReadMsg.MsgID == 0 {
+				if len(request.Msg.ReadMsg.MsgIDList) == 0 {
 					SendTipErrMsg(conn, "消息ID不能为空")
 					continue
 				}
-				MarkMessageAsRead(svcCtx, request.Msg, req.UserID)
+				//MarkMessageAsRead(svcCtx, request.Msg, req.UserID)
+				MarkMessagesAsRead(svcCtx, request.Msg, req.UserID)
 			}
+
 			// 消息入库,入库就是会把聊天记录保存到数据库中
 			msgID := InsertMsgByChat(svcCtx.DB, request.RevUserID, req.UserID, request.Msg)
 			// 将消息发送给发送者和接受者，看看目标用户在不在线 给发送双方都要发送消息
@@ -621,30 +623,63 @@ func SendMsgByUser(svcCtx *svc.ServiceContext, revUserId uint, sendUserID uint, 
 }
 
 // MarkMessageAsRead 标记消息为已读
-func MarkMessageAsRead(svcCtx *svc.ServiceContext, msg ctype.Msg, userID uint) {
+//func MarkMessageAsRead(svcCtx *svc.ServiceContext, msg ctype.Msg, userID uint) {
+//	// 获取消息信息
+//	var msgModel chat_models.ChatModel
+//	err := svcCtx.DB.Take(&msgModel, msg.ReadMsg.MsgID).Error
+//	if err != nil {
+//		logx.Error("Failed to get message:", err)
+//		return
+//	}
+//
+//	// 只有消息的接收者才能标记消息为已读
+//	if msgModel.RevUserID != userID {
+//		logx.Error("User is not the receiver of the message")
+//		return
+//	}
+//	//更新消息状态
+//	err = svcCtx.DB.Model(&chat_models.ChatModel{}).
+//		Where("id = ? AND rev_user_id = ?", msg.ReadMsg.MsgID, msgModel.RevUserID).
+//		Updates(map[string]interface{}{
+//			"status":        MsgStatusRead, //已读
+//			"last_ack_time": time.Now(),
+//		}).Error
+//
+//	if err != nil {
+//		logx.Error(err)
+//		return
+//	}
+//}
+
+// MarkMessagesAsRead 批量标记消息为已读
+func MarkMessagesAsRead(svcCtx *svc.ServiceContext, msg ctype.Msg, userID uint) {
 	// 获取消息信息
-	var msgModel chat_models.ChatModel
-	err := svcCtx.DB.Take(&msgModel, msg.ReadMsg.MsgID).Error
-	if err != nil {
-		logx.Error("Failed to get message:", err)
-		return
+	var msgModelList []chat_models.ChatModel
+	for _, v := range msg.ReadMsg.MsgIDList {
+		var msgModel chat_models.ChatModel
+		err := svcCtx.DB.Take(&msgModel, v).Error
+		if err != nil {
+			logx.Error("Failed to get message:", err)
+			return
+		}
+		// 只有消息的接收者才能标记消息为已读
+		if msgModel.RevUserID == userID {
+			msgModelList = append(msgModelList, msgModel)
+		}
+	}
+	for _, v := range msgModelList {
+		//更新消息状态
+		err := svcCtx.DB.Model(&chat_models.ChatModel{}).
+			Where("id = ? AND rev_user_id = ?", v.ID, v.RevUserID).
+			Updates(map[string]interface{}{
+				"status":        MsgStatusRead, //已读
+				"last_ack_time": time.Now(),
+			}).Error
+
+		if err != nil {
+			logx.Error(err)
+			return
+		}
 	}
 
-	// 只有消息的接收者才能标记消息为已读
-	if msgModel.RevUserID != userID {
-		logx.Error("User is not the receiver of the message")
-		return
-	}
-	//更新消息状态
-	err = svcCtx.DB.Model(&chat_models.ChatModel{}).
-		Where("id = ? AND rev_user_id = ?", msg.ReadMsg.MsgID, msgModel.RevUserID).
-		Updates(map[string]interface{}{
-			"status":        MsgStatusRead, //已读
-			"last_ack_time": time.Now(),
-		}).Error
-
-	if err != nil {
-		logx.Error(err)
-		return
-	}
 }
