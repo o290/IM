@@ -29,6 +29,7 @@ func main() {
 			&chat_models.ChatModel{},
 			&chat_models.TopUserModel{},
 			&chat_models.UserChatDeleteModel{},
+			&chat_models.OfflineMsgModel{},
 
 			&group_models.GroupModel{},
 			&group_models.GroupMemberModel{},

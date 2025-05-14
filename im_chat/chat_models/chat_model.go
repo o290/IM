@@ -48,7 +48,7 @@ type ChatModel struct {
 	Msg        ctype.Msg        `json:"msg"`        //消息内容
 	SystemMsg  *ctype.SystemMsg `json:"systemMsg"`  //系统消息
 	MsgPreview string           `json:"msgPreview"` //消息预览
-	Status     int              `json:"status"`     //消息状态：0-发送中 1-已发送 2-已接收 3-已读
+	Status     int              `json:"status"`     //消息状态：0-未发送 1-已发送 2-已接收 3-已读
 }
 
 func (chat ChatModel) MsgPreviewMethod() string {

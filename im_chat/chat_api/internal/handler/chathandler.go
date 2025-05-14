@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 
 	"server/common/models/ctype"
@@ -28,7 +29,7 @@ import (
 
 const (
 	MsgStatusSent = 1 // 已发送
-	MsgStatusRead = 2 // 已读
+	MsgStatusRead = 3 // 已读
 )
 
 // UserWsInfo 用户websocket信息
@@ -169,6 +170,21 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		// 启动心跳检测协程
 		go heartbeatCheck(svcCtx, req.UserID, userWsInfo)
 
+		// 查询该用户的离线消息
+		var offlineMsgs []chat_models.OfflineMsgModel
+		err = svcCtx.DB.Where("rev_user_id = ?", req.UserID).Find(&offlineMsgs).Error
+		if err != nil {
+			logx.Error(err)
+			SendTipErrMsg(conn, "查询离线消息失败")
+		} else {
+			// 发送离线消息给用户
+			for _, offlineMsg := range offlineMsgs {
+				msgID := InsertMsgByChat(svcCtx.DB, offlineMsg.RevUserID, offlineMsg.SendUserID, offlineMsg.Msg)
+				SendMsgByUser(svcCtx, offlineMsg.RevUserID, offlineMsg.SendUserID, offlineMsg.Msg, msgID)
+				// 删除已发送的离线消息
+				svcCtx.DB.Delete(&offlineMsg)
+			}
+		}
 		// 四.循环从websocket连接conn中读取消息，消息预处理，根据不同类型消息处理，然后存储并发送消息
 		//MSG：R客户端向服务端发送消息
 		for {
@@ -200,6 +216,26 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				continue
 			}
 
+			_, revUserOnline := UserOnlineWsMap[request.RevUserID]
+			if !revUserOnline {
+				// 接收方不在线，存储离线消息
+				offlineMsg := chat_models.OfflineMsgModel{
+					SendUserID: req.UserID,
+					RevUserID:  request.RevUserID,
+					MsgUUID:    uuid.New().String(),
+					MsgType:    request.Msg.Type,
+					Msg:        request.Msg,
+				}
+				err = svcCtx.DB.Create(&offlineMsg).Error
+				if err != nil {
+					logx.Error(err)
+					sendUser, ok := UserOnlineWsMap[req.UserID]
+					if ok {
+						SendTipErrMsg(sendUser.CurrentConn, "离线消息保存失败")
+					}
+				}
+				continue
+			}
 			//生成唯一消息id，服务端向发送方客户端发送确认消息
 			//!!!!!!!这里客户端需要定时监听消息，判断消息是否超时重传!!!!!!!!!!
 			//msg:A
@@ -506,7 +542,7 @@ func InsertMsgByChat(db *gorm.DB, revUserId uint, sendUserID uint, msg ctype.Msg
 		RevUserID:  revUserId,
 		MsgType:    msg.Type,
 		Msg:        msg,
-		Status:     MsgStatusSent,
+		Status:     MsgStatusSent, //已发送
 	}
 	// 生成消息预览内容
 	chatModel.MsgPreview = chatModel.MsgPreviewMethod()
